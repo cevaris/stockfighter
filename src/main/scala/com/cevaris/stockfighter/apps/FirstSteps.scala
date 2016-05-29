@@ -1,8 +1,9 @@
 package com.cevaris.stockfighter.apps
 
-import com.cevaris.stockfighter.api.modules.{EnvConfigModule, GuiceModule}
+import com.cevaris.stockfighter.api.modules.EnvConfigModule
+import com.cevaris.stockfighter.guice.{GuiceApp, GuiceModule}
 import com.cevaris.stockfighter.{ApiKey, SessionConfig}
-import com.google.inject.{Guice, Provides}
+import com.google.inject.{Module, Provides}
 
 
 case class FirstStepsModule() extends GuiceModule {
@@ -11,10 +12,12 @@ case class FirstStepsModule() extends GuiceModule {
     SessionConfig(apiKey, "account", "venue", "symbol")
 }
 
-object FirstSteps {
-  def main(args: Array[String]): Unit = {
-    val injector = Guice.createInjector(EnvConfigModule(), FirstStepsModule())
+object FirstSteps extends GuiceApp {
+  override protected val modules: Seq[Module] = Seq(EnvConfigModule(), FirstStepsModule())
+
+  def appMain(args: Array[String]): Unit = {
     val session = injector.getInstance(classOf[SessionConfig])
     println(session)
   }
+
 }

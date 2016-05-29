@@ -1,4 +1,4 @@
-package com.cevaris.stockfighter.api.modules
+package com.cevaris.stockfighter.guice
 
 import net.codingwell.scalaguice.ScalaModule
 
