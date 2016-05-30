@@ -3,12 +3,16 @@ package com.cevaris.stockfighter.http
 import com.cevaris.stockfighter.json.JsonMapper
 import com.cevaris.stockfighter.{ApiError, ApiKey, StockFighterHost}
 import com.google.inject.Inject
-import com.twitter.util.{Future, Return, Throw, Try}
+import com.twitter.util.{Future, FuturePool, Return, Throw, Try}
+import java.net.URI
+import java.util.concurrent.LinkedBlockingQueue
+import javax.websocket.{ClientEndpointConfig, Endpoint, EndpointConfig, MessageHandler, Session}
 import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
 import org.apache.http.{HttpEntity, HttpResponse, HttpStatus}
+import org.glassfish.tyrus.client.ClientManager
 
 case class HttpRequestBuilder @Inject()(
   apiKey: ApiKey,
@@ -16,6 +20,30 @@ case class HttpRequestBuilder @Inject()(
 ) {
 
   private val mapper = JsonMapper.mapper
+  private val pool = FuturePool.unboundedPool
+
+  // https://tyrus.java.net/documentation/1.12/index/getting-started.html
+  def stream[A](
+    path: String,
+    transform: String => Option[A]
+  ): Future[LinkedBlockingQueue[A]] = pool {
+    val wssPath: String = s"wss://api.stockfighter.io/$path"
+    val cec = ClientEndpointConfig.Builder.create().build()
+    val client = ClientManager.createClient()
+    val queue = new LinkedBlockingQueue[A]()
+
+    client.connectToServer(new Endpoint() {
+      @Override
+      def onOpen(session: Session, config: EndpointConfig): Unit = {
+        session.addMessageHandler(new MessageHandler.Whole[String]() {
+          @Override
+          def onMessage(message: String): Unit = transform(message).map(queue.add)
+        })
+      }
+    }, cec, new URI(wssPath))
+
+    queue
+  }
 
   def get[A](path: String, clazz: Class[A]): Future[A] = wrap {
     val httpClient = newClient()

@@ -79,6 +79,11 @@ case class StockOrderBook(
   ts: DateTime
 )
 
+case class TickerStockQuote(
+  ok: Boolean,
+  quote: StockQuote
+)
+
 case class StockQuote(
   ok: Boolean,
   symbol: String,
@@ -93,4 +98,19 @@ case class StockQuote(
   lastSize: Integer,
   lastTrade: DateTime,
   quoteTime: DateTime
+)
+
+case class Execution(
+  ok: Boolean,
+  account: String,
+  symbol: String,
+  venue: String,
+  order: StockOrder,
+  standingId: Int,
+  incomingId: Int,
+  price: Int,
+  filled: Int,
+  filledAt: DateTime,
+  standingComplete: Boolean,
+  incomingComplete: Boolean
 )

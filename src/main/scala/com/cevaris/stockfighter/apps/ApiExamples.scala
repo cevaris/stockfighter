@@ -5,13 +5,16 @@ import com.cevaris.stockfighter.api.modules.EnvConfigModule
 import com.cevaris.stockfighter.guice.{GuiceApp, GuiceModule}
 import com.cevaris.stockfighter.{ApiKey, SessionConfig, StockOrderRequest}
 import com.google.inject.{Module, Provides}
-import com.twitter.util.Await
+import com.twitter.util.{Await, Future}
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 
 case class ApiExamplesModule() extends GuiceModule {
   @Provides
   def providesSessionConfig(apiKey: ApiKey): SessionConfig =
-    SessionConfig(apiKey, "EXB123456", "TESTEX", "FOOBAR")
+    SessionConfig(apiKey, "PAL34100354", "YVJEX", "TFI")
+
+  //    SessionConfig(apiKey, "EXB123456", "TESTEX", "FOOBAR")
 }
 
 object ApiExamples extends GuiceApp {
@@ -29,14 +32,27 @@ object ApiExamples extends GuiceApp {
     println(Await.result(requester.venueSymbols(session.venue)))
     println(Await.result(requester.stockQuote(session.venue, session.symbol)))
     println(Await.result(requester.symbolOrderBook(session.venue, session.symbol)))
-    val order = Await.result(
-      requester.stockOrder(
-        StockOrderRequest(session.account, session.venue, session.symbol, 100, 10, "buy", "limit")
-      )
-    )
-    println(order)
-    println(Await.result(requester.stockOrderStatus(session.venue, session.symbol, order.id)))
-    println(Await.result(requester.stockOrderCancel(session.venue, session.symbol, order.id)))
+    //    println(Await.result(requester.stockOrderStatus(session.venue, session.symbol, order.id)))
+    //    println(Await.result(requester.stockOrderCancel(session.venue, session.symbol, order.id)))
+
+    val timerPool = new ScheduledThreadPoolExecutor(3)
+    timerPool.scheduleAtFixedRate(new Runnable {
+      override def run(): Unit = {
+        val future = requester.stockQuote(session.venue, session.symbol)
+          .flatMap { quote =>
+            requester.stockOrder(StockOrderRequest(
+              session.account, session.venue, session.symbol,
+              quote.bid - 100, 10, "buy", "limit"
+            ))
+          }
+        println(Await.result(future))
+      }
+    }, 2, 10, TimeUnit.SECONDS)
+
+    Await.result(Future.collect(Seq(
+      requester.streamExecutions(session.account, session.venue),
+      requester.streamQuotes(session.account, session.venue)
+    )))
   }
 
 }

@@ -65,4 +65,57 @@ case class StockFighterRequest @Inject()(
     )
   }
 
+  trait StreamTransformer[A] extends (String => Option[A])
+
+  object StreamQuoteTransformer extends StreamTransformer[StockQuote] {
+    private val mapper = JsonMapper.mapper
+
+    def apply(message: String): Option[StockQuote] = {
+      val ticker = mapper.readValue(message, classOf[TickerStockQuote])
+      if (ticker.ok) {
+        Some(ticker.quote)
+      } else {
+        None
+      }
+    }
+  }
+
+  object StreamExecutionTransformer extends StreamTransformer[Execution] {
+    private val mapper = JsonMapper.mapper
+
+    def apply(message: String): Option[Execution] = {
+      val obj = mapper.readValue(message, classOf[Execution])
+      if (obj.ok) {
+        Some(obj)
+      } else {
+        None
+      }
+    }
+  }
+
+  def streamQuotes(account: String, venue: String): Future[Unit] = {
+    val futureTickerTape = httpRequestBuilder.stream(
+      s"ob/api/ws/$account/venues/$venue/tickertape",
+      StreamQuoteTransformer
+    )
+    futureTickerTape.map { tickerTape =>
+      while (true) {
+        println(tickerTape.take())
+      }
+    }
+  }
+
+  def streamExecutions(account: String, venue: String): Future[Unit] = {
+
+    httpRequestBuilder.stream(
+      s"ob/api/ws/$account/venues/$venue/executions",
+      StreamExecutionTransformer
+    )
+      .map { executions =>
+        while (true) {
+          println(executions.take())
+        }
+      }
+  }
+
 }
