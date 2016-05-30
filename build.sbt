@@ -9,16 +9,12 @@ resolvers ++= Seq(
   "Twitter Maven" at "https://maven.twttr.com"
 )
 
-lazy val v = new {
-  val http4s = "0.13.2"
-  val jodaTime = "2.9.4"
-  val scalaGuice = "4.0.1"
-  val snakeYaml = "1.17"
-}
-
 libraryDependencies ++= Seq(
-  "joda-time" % "joda-time" % v.jodaTime,
-  "net.codingwell" %% "scala-guice" % v.scalaGuice,
-  "org.http4s" %% "http4s-core" % v.http4s,
-  "org.yaml" % "snakeyaml" % v.snakeYaml
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.7.4",
+  "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.3",
+  "com.twitter" % "util-core_2.11" % "6.34.0",
+  "joda-time" % "joda-time" % "2.9.4",
+  "net.codingwell" %% "scala-guice" % "4.0.1",
+  "org.apache.httpcomponents" % "httpclient" % "4.5.2",
+  "org.yaml" % "snakeyaml" % "1.17"
 )
