@@ -2,8 +2,9 @@ package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter.common.concurrency.ReadWriter
 import com.cevaris.stockfighter.{AccountOrders, Direction, StockQuote}
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 
+@Singleton
 case class TradeSession @Inject()(
   var cash: Int = 0,
   var nav: Int = 0,
@@ -23,26 +24,29 @@ case class TradeSession @Inject()(
 
     val okOrders = accountStatus.orders.filter(_.ok)
 
-    val buyOrders = okOrders.filter(_.direction == Direction.Buy).filter(_.ok)
-    val sellOrders = okOrders.filter(_.direction == Direction.Sell).filter(_.ok)
+    var sumCash = 0
+    var sumPosition = 0
 
-    val buyFills = buyOrders.flatMap(_.fills)
-    val sellFills = sellOrders.flatMap(_.fills)
+    for (order <- okOrders) {
+      for (fill <- order.fills) {
 
-    val (bCash, bPos) = buyFills.foldLeft(0, 0) { case (acc, fill) =>
-      (acc._1 + (fill.price * fill.qty), acc._1 + fill.qty)
-    }
+        if (order.direction == Direction.Buy) {
+          sumCash -= fill.price * fill.qty
+          sumPosition += fill.qty
+        }
+        if (order.direction == Direction.Sell) {
+          sumCash += fill.price * fill.qty
+          sumPosition -= fill.qty
+        }
 
-    val (sCash, sPos) = sellFills.foldLeft(0, 0) { case (acc, fill) =>
-      (acc._1 + (fill.price * fill.qty), acc._1 + fill.qty)
+      }
     }
 
     write {
-      cash = sCash - bCash
-      position = sPos - bPos
-      nav = cash + (position * latestQuote.map(_.last).getOrElse(0))
+      cash = sumCash
+      position = sumPosition
+      nav = latestQuote.map(q => cash + (position * q.last)).getOrElse(0)
     }
-    println(this)
   }
 
 }

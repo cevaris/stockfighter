@@ -34,24 +34,17 @@ class TradeSessionTest extends ScalaTest {
 
       val quote = mock[StockQuote]
       when(quote.last).thenReturn(100)
-      val session = TradeSession(
-        latestQuote = Some(quote)
-      )
-//      session.setLatestQuote(quote)
+      val session = TradeSession(latestQuote = Some(quote))
 
       val so1 = mock[StockOrder]
       when(so1.ok).thenReturn(true)
       when(so1.direction).thenReturn(Direction.Buy)
-      when(so1.fills).thenReturn(
-        Seq(Fill(10, 100, ts), Fill(5, 200, ts))
-      )
+      when(so1.fills).thenReturn(Seq(Fill(100, 10, ts), Fill(100, 5, ts)))
 
       val so2 = mock[StockOrder]
       when(so2.ok).thenReturn(true)
       when(so2.direction).thenReturn(Direction.Sell)
-      when(so2.fills).thenReturn(
-        Seq(Fill(10, 200, ts))
-      )
+      when(so2.fills).thenReturn(Seq(Fill(200, 10, ts)))
 
       // Should be ignored
       val so3 = mock[StockOrder]
@@ -62,9 +55,9 @@ class TradeSessionTest extends ScalaTest {
       when(accountOrders.orders).thenReturn(Seq(so1, so2, so3))
       session.update(accountOrders)
 
-      session.cash mustBe 0
-      session.nav mustBe 500
+      session.cash mustBe 500
       session.position mustBe 5
+      session.nav mustBe 1000
     }
   }
 
