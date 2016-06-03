@@ -1,8 +1,8 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter._
-import com.cevaris.stockfighter.http.HttpRequestBuilder
-import com.cevaris.stockfighter.json.JsonMapper
+import com.cevaris.stockfighter.common.http.HttpRequestBuilder
+import com.cevaris.stockfighter.common.json.JsonMapper
 import com.google.inject.Inject
 import com.twitter.util.Future
 import java.io.StringWriter

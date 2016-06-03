@@ -1,6 +1,6 @@
-package com.cevaris.stockfighter.http
+package com.cevaris.stockfighter.common.http
 
-import com.cevaris.stockfighter.json.JsonMapper
+import com.cevaris.stockfighter.common.json.JsonMapper
 import com.cevaris.stockfighter.{ApiError, ApiKey, StockFighterHost}
 import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool, Return, Throw, Try}
@@ -54,7 +54,7 @@ case class HttpRequestBuilder @Inject()(
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) {
       throw mapper.readValue(EntityUtils.toString(entity, "UTF-8"), classOf[ApiError])
     }
-    mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz)
+    Option(mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz))
   }
 
   def delete[A](path: String, clazz: Class[A]): Future[A] = wrap {
@@ -66,7 +66,7 @@ case class HttpRequestBuilder @Inject()(
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) {
       throw mapper.readValue(EntityUtils.toString(entity, "UTF-8"), classOf[ApiError])
     }
-    mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz)
+    Option(mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz))
   }
 
   def post[A](path: String, clazz: Class[A], jsonBody: String): Future[A] = wrap {
@@ -83,12 +83,15 @@ case class HttpRequestBuilder @Inject()(
     if (httpResponse.getStatusLine.getStatusCode != HttpStatus.SC_OK) {
       throw mapper.readValue(EntityUtils.toString(entity, "UTF-8"), classOf[ApiError])
     }
-    mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz)
+    Option(mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz))
   }
 
-  private def wrap[A](f: => A): Future[A] = {
+  private def wrap[A](f: => Option[A]): Future[A] = {
     Try(f) match {
-      case Return(v) => Future.value(v)
+      case Return(v) => v match {
+        case Some(vv) => Future.value(vv)
+        case None => Future.exception(new RuntimeException("null api response"))
+      }
       case Throw(e) => Future.exception(e)
     }
   }

@@ -7,18 +7,16 @@ package object api {
 
 }
 
+object Direction {
+  val Buy = "buy"
+  val Sell = "sell"
+}
+
 case class StockFighterHost @Inject()(value: String)
 
 case class ApiKey @Inject()(value: String) {
   override def toString: String = value
 }
-
-case class SessionConfig @Inject()(
-  apiKey: ApiKey,
-  account: String,
-  venue: String,
-  symbol: String
-)
 
 class ApiException(message: String) extends RuntimeException(message)
 
@@ -47,11 +45,7 @@ case class StockOrderRequest(
   orderType: String
 )
 
-case class AccountOrders(
-  ok: Boolean,
-  venue: String,
-  orders: Seq[StockOrder]
-)
+case class AccountOrders(ok: Boolean, venue: String, orders: Seq[StockOrder])
 
 case class StockOrder(
   ok: Boolean,
@@ -88,14 +82,14 @@ case class StockQuote(
   ok: Boolean,
   symbol: String,
   venue: String,
-  bid: Integer,
-  ask: Integer,
-  bidSize: Integer,
-  askSize: Integer,
-  bidDepth: Integer,
-  askDepth: Integer,
-  last: Integer,
-  lastSize: Integer,
+  bid: Int,
+  ask: Int,
+  bidSize: Int,
+  askSize: Int,
+  bidDepth: Int,
+  askDepth: Int,
+  last: Int,
+  lastSize: Int,
   lastTrade: DateTime,
   quoteTime: DateTime
 )

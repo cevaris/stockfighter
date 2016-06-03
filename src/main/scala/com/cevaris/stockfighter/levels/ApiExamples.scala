@@ -1,9 +1,9 @@
-package com.cevaris.stockfighter.apps
+package com.cevaris.stockfighter.levels
 
-import com.cevaris.stockfighter.api.StockFighterRequest
 import com.cevaris.stockfighter.api.modules.EnvConfigModule
-import com.cevaris.stockfighter.guice.{GuiceApp, GuiceModule}
-import com.cevaris.stockfighter.{ApiKey, SessionConfig, StockOrderRequest}
+import com.cevaris.stockfighter.api.{ApiConfig, StockFighterRequest}
+import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
+import com.cevaris.stockfighter.{ApiKey, StockOrderRequest}
 import com.google.inject.{Module, Provides}
 import com.twitter.util.{Await, Future}
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
@@ -11,8 +11,8 @@ import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 case class ApiExamplesModule() extends GuiceModule {
   @Provides
-  def providesSessionConfig(apiKey: ApiKey): SessionConfig =
-    SessionConfig(apiKey, "PAL34100354", "YVJEX", "TFI")
+  def providesSessionConfig(apiKey: ApiKey): ApiConfig =
+    ApiConfig(apiKey, "PAL34100354", "YVJEX", "TFI")
 
   //    SessionConfig(apiKey, "EXB123456", "TESTEX", "FOOBAR")
 }
@@ -21,7 +21,7 @@ object ApiExamples extends GuiceApp {
   override protected val modules: Seq[Module] = Seq(EnvConfigModule(), ApiExamplesModule())
 
   def appMain(args: Array[String]): Unit = {
-    val session = injector.getInstance(classOf[SessionConfig])
+    val session = injector.getInstance(classOf[ApiConfig])
     println(session)
 
     val requester = injector.getInstance(classOf[StockFighterRequest])
