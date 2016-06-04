@@ -15,7 +15,7 @@ import org.apache.http.util.EntityUtils
 import org.apache.http.{HttpEntity, HttpResponse, HttpStatus}
 import org.glassfish.tyrus.client.ClientManager
 
-case class HttpRequestBuilder @Inject()(
+case class HttpRequest @Inject()(
   apiKey: ApiKey,
   stockFighterHost: StockFighterHost
 ) {

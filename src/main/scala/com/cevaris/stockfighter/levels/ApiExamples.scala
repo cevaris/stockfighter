@@ -1,7 +1,7 @@
 package com.cevaris.stockfighter.levels
 
 import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
-import com.cevaris.stockfighter.api.StockFighterRequest
+import com.cevaris.stockfighter.api.SFRequest
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
 import com.cevaris.stockfighter.{ApiKey, StockOrderRequest}
 import com.google.inject.{Module, Provides}
@@ -24,7 +24,7 @@ object ApiExamples extends GuiceApp {
     val session = injector.getInstance(classOf[ApiConfig])
     println(session)
 
-    val requester = injector.getInstance(classOf[StockFighterRequest])
+    val requester = injector.getInstance(classOf[SFRequest])
     println(Await.result(requester.apiHeartBeat()))
     println(Await.result(requester.accountOrders(session.account, session.venue)))
     println(Await.result(requester.accountOrders(session.account, session.venue, session.symbol)))

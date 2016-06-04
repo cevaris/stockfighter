@@ -1,7 +1,7 @@
 package com.cevaris.stockfighter.levels
 
 import com.cevaris.stockfighter.ApiKey
-import com.cevaris.stockfighter.api.StockFighterRequest
+import com.cevaris.stockfighter.api.SFRequest
 import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
 import com.cevaris.stockfighter.common.app.{AppShutdownState, AppSuccess}
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
@@ -31,7 +31,7 @@ object ChockABlock extends GuiceApp {
 
 case class ChockABlockLevel @Inject()(
   apiConfig: ApiConfig,
-  request: StockFighterRequest
+  request: SFRequest
 ) {
 
   def startLevel(): Future[AppShutdownState] = {
