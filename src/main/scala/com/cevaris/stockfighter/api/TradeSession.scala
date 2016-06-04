@@ -1,7 +1,7 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter.common.concurrency.ReadWriter
-import com.cevaris.stockfighter.{AccountOrders, Direction, StockQuote}
+import com.cevaris.stockfighter.{AccountOrders, Direction, StockOrder, StockQuote}
 import com.google.inject.{Inject, Singleton}
 
 @Singleton
@@ -9,7 +9,8 @@ case class TradeSession @Inject()(
   var cash: Int = 0,
   var nav: Int = 0,
   var position: Int = 0,
-  var latestQuote: Option[StockQuote] = None
+  var latestQuote: Option[StockQuote] = None,
+  var orders: Map[Int, StockOrder] = Map.empty[Int, StockOrder]
 ) extends ReadWriter {
 
   def setLatestQuote(stockQuote: StockQuote): Unit = write {
@@ -26,7 +27,6 @@ case class TradeSession @Inject()(
 
     var sumCash = 0
     var sumPosition = 0
-
     for (order <- okOrders) {
       for (fill <- order.fills) {
 
@@ -45,6 +45,7 @@ case class TradeSession @Inject()(
     write {
       cash = sumCash
       position = sumPosition
+      orders = okOrders.map(o => o.id -> o).toMap
       nav = latestQuote.map(q => cash + (position * q.last)).getOrElse(0)
     }
   }

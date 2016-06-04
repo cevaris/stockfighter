@@ -9,6 +9,7 @@ class TradeSessionTest extends ScalaTest {
   val accountOrders: AccountOrders = mock[AccountOrders]
 
   before {
+    reset(accountOrders)
     when(accountOrders.ok).thenReturn(true)
   }
 
@@ -17,6 +18,7 @@ class TradeSessionTest extends ScalaTest {
       val session = TradeSession()
       session.cash mustBe 0
       session.nav mustBe 0
+      session.position mustBe 0
     }
 
     "handle empty orders" in {
@@ -26,7 +28,8 @@ class TradeSessionTest extends ScalaTest {
 
       session.cash mustBe 0
       session.nav mustBe 0
-      session.cash mustBe 0
+      session.position mustBe 0
+      session.orders mustBe Map.empty[Int, StockOrder]
     }
 
     "handle update correctly" in {
@@ -38,17 +41,20 @@ class TradeSessionTest extends ScalaTest {
 
       val so1 = mock[StockOrder]
       when(so1.ok).thenReturn(true)
+      when(so1.id).thenReturn(1)
       when(so1.direction).thenReturn(Direction.Buy)
       when(so1.fills).thenReturn(Seq(Fill(100, 10, ts), Fill(100, 5, ts)))
 
       val so2 = mock[StockOrder]
       when(so2.ok).thenReturn(true)
+      when(so2.id).thenReturn(2)
       when(so2.direction).thenReturn(Direction.Sell)
       when(so2.fills).thenReturn(Seq(Fill(200, 10, ts)))
 
       // Should be ignored
       val so3 = mock[StockOrder]
       when(so3.ok).thenReturn(false)
+      when(so3.id).thenReturn(3)
       when(so3.direction).thenReturn(Direction.Sell)
       when(so3.fills).thenReturn(Seq(Fill(99, 99, ts)))
 
@@ -58,6 +64,7 @@ class TradeSessionTest extends ScalaTest {
       session.cash mustBe 500
       session.position mustBe 5
       session.nav mustBe 1000
+      session.orders mustBe Map(1 -> so1, 2 -> so2)
     }
   }
 
