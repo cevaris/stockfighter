@@ -1,11 +1,11 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter.common.concurrency.ReadWriter
-import com.cevaris.stockfighter.{AccountOrders, Direction, StockOrder, StockQuote}
+import com.cevaris.stockfighter.{AccountOrders, StockOrder, StockQuote}
 import com.google.inject.{Inject, Singleton}
 
 @Singleton
-case class TradeSession @Inject()(
+case class SFSession @Inject()(
   var cash: Int = 0,
   var nav: Int = 0,
   var position: Int = 0,
@@ -30,11 +30,11 @@ case class TradeSession @Inject()(
     for (order <- okOrders) {
       for (fill <- order.fills) {
 
-        if (order.direction == Direction.Buy) {
+        if (order.direction == DirectionType.Buy) {
           sumCash -= fill.price * fill.qty
           sumPosition += fill.qty
         }
-        if (order.direction == Direction.Sell) {
+        if (order.direction == DirectionType.Sell) {
           sumCash += fill.price * fill.qty
           sumPosition -= fill.qty
         }

@@ -1,13 +1,28 @@
 package com.cevaris.stockfighter
 
+import com.cevaris.stockfighter.api.{DirectionType, OrderType}
 import com.google.inject.Inject
 import org.joda.time.DateTime
 
-package object api
+package object api {
+  type DirectionType = String
+  type OrderType = String
 
-object Direction {
-  val Buy = "buy"
-  val Sell = "sell"
+  object DirectionType {
+
+    val Buy: DirectionType = "buy"
+    val Sell: DirectionType = "sell"
+  }
+
+  object OrderType {
+
+    val Limit: OrderType = "limit"
+    val Market: OrderType = "market"
+    val FillOrKill: OrderType = "fill-or-kill"
+    val ImmediateOrCancel: OrderType = "immediate-or-cancel"
+
+  }
+
 }
 
 case class StockFighterHost @Inject()(value: String)
@@ -39,8 +54,8 @@ case class StockOrderRequest(
   symbol: String,
   price: Int,
   qty: Int,
-  direction: String,
-  orderType: String
+  direction: DirectionType,
+  orderType: OrderType
 )
 
 case class AccountOrders(ok: Boolean, venue: String, orders: Seq[StockOrder])

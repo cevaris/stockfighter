@@ -1,12 +1,23 @@
 package com.cevaris.stockfighter.levels
 
-import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
+import com.cevaris.stockfighter.ApiKey
 import com.cevaris.stockfighter.api.SFRequest
+import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
+import com.cevaris.stockfighter.common.app.{AppShutdownState, AppSuccess}
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
-import com.cevaris.stockfighter.{ApiKey, StockOrderRequest}
-import com.google.inject.{Module, Provides, Singleton}
-import com.twitter.util.Await
+import com.google.inject.{Inject, Module, Provides, Singleton}
+import com.twitter.util.{Await, Future}
 
+case class FirstStepsLevel @Inject()(
+  apiConfig: ApiConfig,
+  request: SFRequest
+) {
+
+  def startLevel(): Future[AppShutdownState] = {
+    Future.value(AppSuccess())
+  }
+
+}
 
 case class FirstStepsModule() extends GuiceModule {
   @Provides
@@ -16,20 +27,14 @@ case class FirstStepsModule() extends GuiceModule {
 }
 
 object FirstSteps extends GuiceApp {
-  override protected val modules: Seq[Module] = Seq(EnvConfigModule(), FirstStepsModule())
+  override protected val modules: Seq[Module] = Seq(
+    EnvConfigModule(),
+    FirstStepsModule()
+  )
 
   def appMain(args: Array[String]): Unit = {
-    val session = injector.getInstance(classOf[ApiConfig])
-    val request = injector.getInstance(classOf[SFRequest])
-
-    val future = request.stockQuote(session.venue, session.symbol)
-      .flatMap { quote =>
-        request.stockOrder(StockOrderRequest(
-          session.account, session.venue, session.symbol,
-          quote.bid, 101, "buy", "market"
-        ))
-      }
-    println(Await.result(future))
+    val request = injector.getInstance(classOf[FirstStepsLevel])
+    Await.result(request.startLevel())
   }
 
 }
