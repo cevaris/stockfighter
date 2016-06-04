@@ -1,7 +1,7 @@
 package com.cevaris.stockfighter.levels
 
-import com.cevaris.stockfighter.api.modules.EnvConfigModule
-import com.cevaris.stockfighter.api.{ApiConfig, StockFighterRequest}
+import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
+import com.cevaris.stockfighter.api.StockFighterRequest
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
 import com.cevaris.stockfighter.{ApiKey, StockOrderRequest}
 import com.google.inject.{Module, Provides, Singleton}

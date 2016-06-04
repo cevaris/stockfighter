@@ -1,9 +1,9 @@
 package com.cevaris.stockfighter.levels
 
 import com.cevaris.stockfighter.ApiKey
-import com.cevaris.stockfighter.api.modules.EnvConfigModule
-import com.cevaris.stockfighter.api.{ApiConfig, StockFighterRequest}
-import com.cevaris.stockfighter.common.app.{AppShutdownState, AppSucess}
+import com.cevaris.stockfighter.api.StockFighterRequest
+import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
+import com.cevaris.stockfighter.common.app.{AppShutdownState, AppSuccess}
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
 import com.google.inject.{Inject, Module, Provides, Singleton}
 import com.twitter.util.{Await, Future}
@@ -35,7 +35,7 @@ case class ChockABlockLevel @Inject()(
 ) {
 
   def startLevel(): Future[AppShutdownState] = {
-    Future.value(AppSucess)
+    Future.value(AppSuccess())
   }
 
 }

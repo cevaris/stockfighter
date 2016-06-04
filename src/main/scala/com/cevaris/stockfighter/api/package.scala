@@ -3,9 +3,7 @@ package com.cevaris.stockfighter
 import com.google.inject.Inject
 import org.joda.time.DateTime
 
-package object api {
-
-}
+package object api
 
 object Direction {
   val Buy = "buy"

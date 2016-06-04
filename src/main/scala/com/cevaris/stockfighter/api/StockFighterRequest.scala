@@ -1,6 +1,7 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter._
+import com.cevaris.stockfighter.common.concurrency.{FutureState, FutureSuccess}
 import com.cevaris.stockfighter.common.http.HttpRequestBuilder
 import com.cevaris.stockfighter.common.json.JsonMapper
 import com.google.inject.Inject
@@ -93,19 +94,20 @@ case class StockFighterRequest @Inject()(
     }
   }
 
-  def streamQuotes(account: String, venue: String): Future[Unit] = {
-    val futureTickerTape = httpRequestBuilder.stream(
+  def streamQuotes(account: String, venue: String): Future[FutureSuccess] = {
+    httpRequestBuilder.stream(
       s"ob/api/ws/$account/venues/$venue/tickertape",
       StreamQuoteTransformer
     )
-    futureTickerTape.map { tickerTape =>
-      while (true) {
-        println(tickerTape.take())
+      .map { tickerTape =>
+        while (true) {
+          println(tickerTape.take())
+        }
       }
-    }
+      .map(_ => FutureSuccess())
   }
 
-  def streamExecutions(account: String, venue: String): Future[Unit] = {
+  def streamExecutions(account: String, venue: String): Future[FutureState] = {
 
     httpRequestBuilder.stream(
       s"ob/api/ws/$account/venues/$venue/executions",
@@ -116,6 +118,7 @@ case class StockFighterRequest @Inject()(
           println(executions.take())
         }
       }
+      .map(_ => FutureSuccess())
   }
 
 }

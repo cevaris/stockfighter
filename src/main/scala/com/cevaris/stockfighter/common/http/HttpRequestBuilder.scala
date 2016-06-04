@@ -1,9 +1,10 @@
 package com.cevaris.stockfighter.common.http
 
+import com.cevaris.stockfighter.common.app.wrap
 import com.cevaris.stockfighter.common.json.JsonMapper
 import com.cevaris.stockfighter.{ApiError, ApiKey, StockFighterHost}
 import com.google.inject.Inject
-import com.twitter.util.{Future, FuturePool, Return, Throw, Try}
+import com.twitter.util.{Future, FuturePool}
 import java.net.URI
 import java.util.concurrent.LinkedBlockingQueue
 import javax.websocket.{ClientEndpointConfig, Endpoint, EndpointConfig, MessageHandler, Session}
@@ -84,16 +85,6 @@ case class HttpRequestBuilder @Inject()(
       throw mapper.readValue(EntityUtils.toString(entity, "UTF-8"), classOf[ApiError])
     }
     Option(mapper.readValue(EntityUtils.toString(entity, "UTF-8"), clazz))
-  }
-
-  private def wrap[A](f: => Option[A]): Future[A] = {
-    Try(f) match {
-      case Return(v) => v match {
-        case Some(vv) => Future.value(vv)
-        case None => Future.exception(new RuntimeException("null api response"))
-      }
-      case Throw(e) => Future.exception(e)
-    }
   }
 
   private def newClient() =
