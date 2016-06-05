@@ -1,17 +1,20 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter._
-import com.cevaris.stockfighter.common.http.HttpRequest
 import com.cevaris.stockfighter.common.time.DateTimeUtils
 import org.mockito.Mockito._
 
 class SFSessionTest extends ScalaTest {
 
-  val accountOrders: AccountOrders = mock[AccountOrders]
-  val ts = DateTimeUtils.now
+  private val accountOrders = mock[AccountOrders]
+  private val request = mock[SFRequest]
+  private val config = mock[SFConfig]
+  private val ts = DateTimeUtils.now
 
   before {
     reset(accountOrders)
+    reset(request)
+    reset(config)
     when(accountOrders.ok).thenReturn(true)
   }
 
@@ -101,13 +104,7 @@ class SFSessionTest extends ScalaTest {
     }
   }
 
-  def newSession() = {
-    val apikey = ApiKey("apikey")
-    SFSession(
-      SFConfig(apikey, "account", "venue", "symbol"),
-      SFRequest(HttpRequest(apikey, SFHost("localhost")))
-    )
-  }
+  def newSession() = SFSession(config, request)
 
 
 }
