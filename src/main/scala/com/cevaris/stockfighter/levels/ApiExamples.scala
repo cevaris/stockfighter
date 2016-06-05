@@ -1,18 +1,18 @@
 package com.cevaris.stockfighter.levels
 
-import com.cevaris.stockfighter.api.modules.{ApiConfig, EnvConfigModule}
-import com.cevaris.stockfighter.api.SFRequest
+import com.cevaris.stockfighter.api.modules.EnvConfigModule
+import com.cevaris.stockfighter.api.{SFConfig, SFRequest}
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
-import com.cevaris.stockfighter.{ApiKey, StockOrderRequest}
+import com.cevaris.stockfighter.{ApiKey, Execution, StockOrderRequest, StockQuote}
 import com.google.inject.{Module, Provides}
 import com.twitter.util.{Await, Future}
-import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{BlockingQueue, ScheduledThreadPoolExecutor, TimeUnit}
 
 
 case class ApiExamplesModule() extends GuiceModule {
   @Provides
-  def providesSessionConfig(apiKey: ApiKey): ApiConfig =
-    ApiConfig(apiKey, "PAL34100354", "YVJEX", "TFI")
+  def providesSessionConfig(apiKey: ApiKey): SFConfig =
+    SFConfig(apiKey, "PAL34100354", "YVJEX", "TFI")
 
   //    SessionConfig(apiKey, "EXB123456", "TESTEX", "FOOBAR")
 }
@@ -21,7 +21,7 @@ object ApiExamples extends GuiceApp {
   override protected val modules: Seq[Module] = Seq(EnvConfigModule(), ApiExamplesModule())
 
   def appMain(args: Array[String]): Unit = {
-    val session = injector.getInstance(classOf[ApiConfig])
+    val session = injector.getInstance(classOf[SFConfig])
     println(session)
 
     val requester = injector.getInstance(classOf[SFRequest])
@@ -49,9 +49,16 @@ object ApiExamples extends GuiceApp {
       }
     }, 2, 10, TimeUnit.SECONDS)
 
+    def printer[A](q: BlockingQueue[A]): Future[Unit] = {
+      while (true) {
+        println(q.take())
+      }
+      Future.Done
+    }
+
     Await.result(Future.collect(Seq(
-      requester.streamExecutions(session.account, session.venue),
-      requester.streamQuotes(session.account, session.venue)
+      requester.streamExecutions(session.account, session.venue)(printer[Execution]),
+      requester.streamQuotes(session.account, session.venue)(printer[StockQuote])
     )))
   }
 

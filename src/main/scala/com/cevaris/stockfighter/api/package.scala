@@ -25,7 +25,7 @@ package object api {
 
 }
 
-case class StockFighterHost @Inject()(value: String)
+case class SFHost @Inject()(value: String)
 
 case class ApiKey @Inject()(value: String) {
   override def toString: String = value

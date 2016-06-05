@@ -2,10 +2,10 @@ package com.cevaris.stockfighter.common
 
 package object concurrency {
 
-  trait FutureState
+  trait Result
 
-  case class FutureSuccess() extends FutureState
+  case class SuccessResult() extends Result
 
-  case class FutureFailure(exception: Throwable) extends FutureState
+  case class FailureResult(exception: Throwable) extends Result
 
 }

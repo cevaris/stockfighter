@@ -1,6 +1,5 @@
 package com.cevaris.stockfighter.api
 
-import com.cevaris.stockfighter.api.modules.ApiConfig
 import com.cevaris.stockfighter.{StockOrder, StockOrderRequest}
 import com.google.inject.{Inject, Singleton}
 import com.twitter.logging.Logger
@@ -8,7 +7,7 @@ import com.twitter.util.Future
 
 @Singleton
 case class SFTrader @Inject()(
-  apiConfig: ApiConfig,
+  apiConfig: SFConfig,
   sFSession: SFSession,
   sFRequest: SFRequest
 ) {

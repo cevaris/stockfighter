@@ -2,7 +2,7 @@ package com.cevaris.stockfighter.common.http
 
 import com.cevaris.stockfighter.common.app.wrap
 import com.cevaris.stockfighter.common.json.JsonMapper
-import com.cevaris.stockfighter.{ApiError, ApiKey, StockFighterHost}
+import com.cevaris.stockfighter.{ApiError, ApiKey, SFHost}
 import com.google.inject.Inject
 import com.twitter.util.{Future, FuturePool}
 import java.net.URI
@@ -17,7 +17,7 @@ import org.glassfish.tyrus.client.ClientManager
 
 case class HttpRequest @Inject()(
   apiKey: ApiKey,
-  stockFighterHost: StockFighterHost
+  stockFighterHost: SFHost
 ) {
 
   private val mapper = JsonMapper.mapper

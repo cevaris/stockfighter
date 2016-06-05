@@ -1,12 +1,12 @@
 package com.cevaris.stockfighter.api
 
 import com.cevaris.stockfighter._
-import com.cevaris.stockfighter.common.concurrency.{FutureState, FutureSuccess}
 import com.cevaris.stockfighter.common.http.HttpRequest
 import com.cevaris.stockfighter.common.json.JsonMapper
 import com.google.inject.Inject
 import com.twitter.util.Future
 import java.io.StringWriter
+import java.util.concurrent.BlockingQueue
 
 
 case class SFRequest @Inject()(
@@ -94,31 +94,30 @@ case class SFRequest @Inject()(
     }
   }
 
-  def streamQuotes(account: String, venue: String): Future[FutureSuccess] = {
+  def streamQuotes[A](
+    account: String,
+    venue: String
+  )(
+    f: (BlockingQueue[StockQuote]) => A
+  ): Future[A] = {
     httpRequest.stream(
       s"ob/api/ws/$account/venues/$venue/tickertape",
       StreamQuoteTransformer
     )
-      .map { tickerTape =>
-        while (true) {
-          println(tickerTape.take())
-        }
-      }
-      .map(_ => FutureSuccess())
+      .map(f)
   }
 
-  def streamExecutions(account: String, venue: String): Future[FutureState] = {
-
+  def streamExecutions[A](
+    account: String,
+    venue: String
+  )(
+    f: (BlockingQueue[Execution]) => A
+  ): Future[A] = {
     httpRequest.stream(
       s"ob/api/ws/$account/venues/$venue/executions",
       StreamExecutionTransformer
     )
-      .map { executions =>
-        while (true) {
-          println(executions.take())
-        }
-      }
-      .map(_ => FutureSuccess())
+      .map(f)
   }
 
 }
