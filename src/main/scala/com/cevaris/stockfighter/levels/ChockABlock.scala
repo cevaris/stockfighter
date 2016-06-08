@@ -3,17 +3,20 @@ package com.cevaris.stockfighter.levels
 import com.cevaris.stockfighter.ApiKey
 import com.cevaris.stockfighter.api.modules.EnvConfigModule
 import com.cevaris.stockfighter.api.{OrderType, SFConfig, SFRequest, SFSession, SFTrader}
-import com.cevaris.stockfighter.common.app.{AppShutdownState, AppSuccess}
+import com.cevaris.stockfighter.common.app.{AppFailure, AppShutdownState, AppSuccess}
 import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
+import com.cevaris.stockfighter.common.util.MinMaxRange
 import com.google.inject.{Inject, Module, Provides, Singleton}
-import com.twitter.util.{Await, Future}
+import com.twitter.finagle.util.DefaultTimer
+import com.twitter.logging.Logger
+import com.twitter.util.{Await, Duration, Future, NonFatal}
 
 
 case class ChockABlockModule() extends GuiceModule {
   @Provides
   @Singleton
   def providesSessionConfig(apiKey: ApiKey): SFConfig =
-    SFConfig(apiKey, "MA58350224", "DFKEX", "RWL")
+    SFConfig(apiKey, "SAK60094393", "KDUEX", "PIXE")
 }
 
 object ChockABlock extends GuiceApp {
@@ -35,16 +38,32 @@ case class ChockABlockLevel @Inject()(
   trader: SFTrader,
   session: SFSession
 ) {
+  private implicit val timer = DefaultTimer.twitter
+  private val log = Logger.get
+  private val posRange = MinMaxRange(-399, 399)
 
   def startLevel(): Future[AppShutdownState] = {
+    val futureObserve = session.observe()
 
-    Future.whileDo(session.nav < 100000) {
-      request.stockQuote(config.venue, config.symbol)
-        .flatMap { quote =>
-          trader.buy(quote.bid, 100, OrderType.Limit)
+    val futureLogic =
+      request.stockQuote(config.venue, config.symbol).flatMap { quote =>
+        Future.whileDo(session.position < 100000) {
+          log.info(s"current position: ${ session.position } current quote: $quote.last")
+          val quoteBid = math.min(session.latestQuote.getOrElse(quote).bid, quote.bid)
+          trader.buy(quoteBid, 500, OrderType.Limit)
+            .flatMap { _ =>
+              Future.sleep(Duration.fromSeconds(2))
+            }
         }
-    }
-    Future.value(AppSuccess())
+      }
+
+    Future.collect(Seq(futureObserve, futureLogic))
+      .map(_ => AppSuccess())
+      .rescue {
+        case NonFatal(t) =>
+          log.error(t, "app failed")
+          Future.value(AppFailure(t))
+      }
   }
 
 }

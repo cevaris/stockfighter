@@ -3,10 +3,8 @@ package com.cevaris.stockfighter.api
 import com.cevaris.stockfighter.common.concurrency.{ReadWriter, Result, SuccessResult}
 import com.cevaris.stockfighter.{AccountOrders, StockOrder, StockQuote}
 import com.google.inject.{Inject, Singleton}
-import com.twitter.finagle.util.DefaultTimer
 import com.twitter.logging.Logger
-import com.twitter.util.{Await, Duration, Future, FuturePool, Timer}
-import java.util.concurrent.Executors
+import com.twitter.util.{Await, Future, FuturePool, NonFatal, Timer}
 
 @Singleton
 case class SFSession @Inject()(
@@ -28,8 +26,8 @@ case class SFSession @Inject()(
   var latestQuote: Option[StockQuote] = None
   var orders: Map[Int, StockOrder] = Map.empty[Int, StockOrder]
 
-  private implicit val timer = DefaultTimer.twitter
-  private val observerPool = FuturePool(Executors.newFixedThreadPool(1))
+  //private val observerPool = FuturePool(Executors.newFixedThreadPool(2))
+  private val observerPool = FuturePool.unboundedPool
   private val log = Logger.get
 
   def setLatestQuote(stockQuote: StockQuote): Unit = write {
@@ -40,11 +38,11 @@ case class SFSession @Inject()(
     position + unfilledPosition
   }
 
-  def update(accountStatus: AccountOrders): Unit = {
-    log.debug(s"updating session: $accountStatus")
+  def update(accountStatus: AccountOrders): SFSession = {
+    log.info(s"thread: ${ Thread.currentThread().getId } updating session: $accountStatus")
 
-    if (!accountStatus.ok) {
-      return
+    if (!accountStatus.ok) return read {
+      this
     }
 
     val okOrders = accountStatus.orders.filter(_.ok)
@@ -78,35 +76,30 @@ case class SFSession @Inject()(
       orders = okOrders.map(o => o.id -> o).toMap
       nav = latestQuote.map(q => cash + (position * q.last)).getOrElse(0)
     }
+    read {
+      this
+    }
   }
 
   def observe()(implicit timer: Timer): Future[Result] = observerPool {
-    val quoteFuture = request.streamQuotes(config.account, config.venue) { queue =>
-      while (true) {
-        val quote = queue.take()
-        write {
-          latestQuote = Some(quote)
-        }
+    val quoteFuture = request.streamQuotes(config.account, config.venue) { quote =>
+//      log.info(s"thread: ${ Thread.currentThread().getId } stream $quote")
+      write {
+        latestQuote = Some(quote)
       }
-      SuccessResult()
     }
 
-    val fillFuture = request.streamExecutions(config.account, config.venue) { queue =>
-      while (true) {
-        val execution = queue.take()
-        log.info(execution.toString)
-      }
-      SuccessResult()
-    }
-
-    val statusFuture = Future.whileDo(p = true) {
+    val fillFuture = request.streamExecutions(config.account, config.venue) { execution =>
+      log.info(s"thread: ${ Thread.currentThread().getId } stream $execution")
       request.accountOrders(config.account, config.venue)
         .map(update)
-        .flatMap(_ => Future.sleep(Duration.fromSeconds(1)))
-    }.map(_ => SuccessResult())
+        .onFailure {
+          case NonFatal(t) => log.error(t, "failure execution account update")
+        }
+    }
 
     val futureTasks =
-      Future.collect(Seq(quoteFuture, fillFuture, statusFuture))
+      Future.collect(Seq(quoteFuture, fillFuture))
         .map(_ => SuccessResult())
 
     Await.result(futureTasks)

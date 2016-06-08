@@ -9,6 +9,12 @@ abstract class GuiceApp {
 
   def main(args: Array[String]): Unit = {
     optInjector = Some(Guice.createInjector(modules: _*))
+
+    System.setProperty(
+      "java.util.logging.SimpleFormatter.format",
+      "%1$tF %1$tT %4$s %2$s %5$s%6$s%n"
+    )
+
     appMain(args)
   }
 

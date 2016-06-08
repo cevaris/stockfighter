@@ -6,7 +6,7 @@ import com.cevaris.stockfighter.common.guice.{GuiceApp, GuiceModule}
 import com.cevaris.stockfighter.{ApiKey, Execution, StockOrderRequest, StockQuote}
 import com.google.inject.{Module, Provides}
 import com.twitter.util.{Await, Future}
-import java.util.concurrent.{BlockingQueue, ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 
 case class ApiExamplesModule() extends GuiceModule {
@@ -49,10 +49,8 @@ object ApiExamples extends GuiceApp {
       }
     }, 2, 10, TimeUnit.SECONDS)
 
-    def printer[A](q: BlockingQueue[A]): Future[Unit] = {
-      while (true) {
-        println(q.take())
-      }
+    def printer[A](q: A): Future[Unit] = {
+      println(q)
       Future.Done
     }
 

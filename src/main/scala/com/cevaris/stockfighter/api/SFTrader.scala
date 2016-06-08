@@ -7,9 +7,9 @@ import com.twitter.util.Future
 
 @Singleton
 case class SFTrader @Inject()(
-  apiConfig: SFConfig,
-  sFSession: SFSession,
-  sFRequest: SFRequest
+  config: SFConfig,
+  session: SFSession,
+  request: SFRequest
 ) {
 
   private val logger = Logger.get()
@@ -37,9 +37,9 @@ case class SFTrader @Inject()(
     orderType: OrderType
   ): Future[StockOrder] = {
     val soReq = StockOrderRequest(
-      account = apiConfig.account,
-      venue = apiConfig.venue,
-      symbol = apiConfig.symbol,
+      account = config.account,
+      venue = config.venue,
+      symbol = config.symbol,
       price,
       qty,
       direction,
@@ -47,7 +47,12 @@ case class SFTrader @Inject()(
     )
     logger.info(soReq.toString)
 
-    sFRequest.stockOrder(soReq)
+    request.stockOrder(soReq)
+      .flatMap { order =>
+        request.accountOrders(config.account, config.venue)
+          .map(session.update)
+          .map(_ => order)
+      }
   }
 
 

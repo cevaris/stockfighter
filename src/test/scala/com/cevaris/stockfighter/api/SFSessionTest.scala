@@ -104,7 +104,7 @@ class SFSessionTest extends ScalaTest {
     }
   }
 
-  def newSession() = SFSession(config, request)
+  private def newSession() = SFSession(config, request)
 
 
 }
